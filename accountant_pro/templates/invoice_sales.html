@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Form</title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input[readonly] {
+            background-color: #f2f2f2;
+            cursor: not-allowed;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>Invoice Form</h1>
+    
+    <form id="invoice-form">
+        <label for="customer">Customer:</label>
+        <input type="text" id="customer" name="customer"><br>
+
+        <label for="customer-email">Customer Email:</label>
+        <input type="email" id="customer-email" name="customer-email"><br>
+
+        <label for="billing-address">Billing Address:</label>
+        <textarea id="billing-address" name="billing-address"></textarea><br>
+
+        <label for="terms">Terms:</label>
+        <input type="text" id="terms" name="terms"><br>
+
+        <label for="invoice-date">Invoice Date:</label>
+        <input type="date" id="invoice-date" name="invoice-date"><br>
+
+        <label for="due-date">Due Date:</label>
+        <input type="date" id="due-date" name="due-date"><br>
+
+        <label for="invoice-number">Invoice Number:</label>
+        <input type="text" id="invoice-number" name="invoice-number"><br>
+
+        <label for="tags">Tags:</label>
+        <input type="text" id="tags" name="tags"><br>
+
+        <table id="invoice-table">
+            <thead>
+                <tr>
+                    <th>Service Date</th>
+                    <th>Product/Service</th>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Tax</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be dynamically added here -->
+            </tbody>
+        </table>
+
+        <button id="add-line">Add Line</button>
+        <button id="clear-lines">Clear All Lines</button>
+        <button id="add-subtotal">Add Subtotal</button>
+
+        <label for="message">Message on Invoice:</label>
+        <textarea id="message" name="message"></textarea><br>
+
+        <label for="subtotal">Subtotal:</label>
+        <input type="text" id="subtotal" name="subtotal" readonly><br>
+
+        <label for="total">Total:</label>
+        <input type="text" id="total" name="total" readonly><br>
+
+        <label for="balance-due">Balance Due:</label>
+        <input type="text" id="balance-due" name="balance-due" readonly><br>
+    </form>
+
+    <script>
+        // JavaScript for handling button actions and calculations can be added here.
+    </script>
+</body>
+</html>

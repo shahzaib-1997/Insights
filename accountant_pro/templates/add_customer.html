@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta tags  -->
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+
+    <title>Accountant-Pro - Sales</title>
+    <link rel="icon" type="image/png" href="images/favicon.png" />
+
+    <!-- CSS Assets -->
+    <link rel="stylesheet" href="../static/css/app.css" />
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+          rel="stylesheet"
+        />
+
+        <style>
+          .form-inline-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem; /* Adjust the gap as needed */
+          }
+        
+          .form-inline-label {
+            flex: 1;
+            min-width: 0; /* Allow labels to break into a new line if necessary */
+          }
+        
+          .form-textarea {
+            flex: 2;
+            width: calc(100% - 1rem); /* Adjust the width as needed */
+          }
+        </style>
+        
+    <!-- Javascript Assets -->
+    <script src="../static/js/app1.js" defer> </script>
+
+
+    <script>
+      /**
+       * THIS SCRIPT REQUIRED FOR PREVENT FLICKERING IN SOME BROWSERS
+       */
+      localStorage.getItem("_x_darkMode_on") === "true" &&
+        document.documentElement.classList.add("dark");
+
+        function updateRate(selectElement) {
+      const rateInput = selectElement.parentElement.nextElementSibling.nextElementSibling.nextElementSibling;
+      const selectedOption = selectElement.options[selectElement.selectedIndex];
+      rateInput.value = selectedOption.value;
+  }
+
+  
+      document.addEventListener("DOMContentLoaded", function () {
+        const addLineButton = document.getElementById("addLineButton");
+        const deleteLinesButton = document.getElementById("deleteLinesButton"); // Get the Delete Lines button
+        const tableBody = document.querySelector("table tbody");
+        const originalRow = tableBody.querySelector("tr");
+    
+        // Function to delete lines
+        function deleteLines() {
+          const rows = tableBody.querySelectorAll("tr");
+          if (rows.length > 1) { // Ensure there is at least one row before attempting to delete
+            tableBody.removeChild(rows[rows.length - 1]); // Remove the last row
+          }
+        }
+    
+        addLineButton.addEventListener("click", function () {
+          const newRow = originalRow.cloneNode(true);
+    
+          // Clear the values in the new row's input fields
+          const inputFields = newRow.querySelectorAll('input');
+          inputFields.forEach(function (input) {
+            input.value = '';
+          });
+    
+          // Append the new row to the table body
+          tableBody.appendChild(newRow);
+        });
+    
+        // Add a click event listener to the Delete Lines button
+        deleteLinesButton.addEventListener("click", deleteLines);
+      });
+    
+
+        
+    </script>
+  </head>
+
+  <body x-data class="is-header-blur" x-bind="$store.global.documentBody">
+    <!-- App preloader-->
+    <div>
+     
+          </div>
+          <h3
+            class="mt-3 text-xl font-semibold text-slate-600 dark:text-navy-100"
+          >
+            Add Customer
+          </h3>
+          <div class="is-scrollbar-hidden min-w-full overflow-x-auto">
+
+          <div class="col-span-12 sm:col-span-8">
+            <div class="card p-4 sm:p-5">
+              <p
+                class="text-base font-medium text-slate-700 dark:text-navy-100"
+              >
+          
+              </p>
+              <form method="post">
+                {% csrf_token %}
+                <strong>Name and Contact</strong><br>
+                <div class="form-inline-container">
+                  <label class="block form-inline-label">
+                    <span>Title</span>
+                    <textarea
+                      name="title"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                
+                  <label class="block form-inline-label">
+                    <span>First Name</span>
+                    <textarea
+                      name="first_name"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                
+                  <label class="block form-inline-label">
+                    <span>Middle Name</span>
+                    <textarea
+                      name="middle_name"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                
+                  <label class="block form-inline-label">
+                    <span>Last Name</span>
+                    <textarea
+                      name="last_name"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                
+                  <label class="block form-inline-label">
+                    <span>Suffix</span>
+                    <textarea
+                      name="suffix"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                </div>
+                <div class="form-inline-container">
+                  <div class="form-inline-label">
+
+                  <label class="block">
+                    <span>Customer Display Name</span>
+                    <textarea
+                      name="customer_display_name"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                  </div>
+
+
+                  <div class="form-inline-label">
+
+                  <label class="block">
+                    <span>Company Name</span>
+                    <textarea
+                      name="company_name"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+              </div>
+
+                <div class="form-inline-container">
+                  <div class="form-inline-label">
+                  <label class="block">
+                    <span>Email</span>
+                    <textarea
+                      name="email"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+
+                  <div class="form-inline-label">
+
+                  <label class="block">
+                    <span>Phone Number</span>
+                    <textarea
+                      name="phone_number"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+              </div>
+              <div class="form-inline-container">
+                <div class="form-inline-label">
+                  <label class="block">
+                    <span>Mobile Number</span>
+                    <textarea
+                      name="mobile_number"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+                  <div class="form-inline-label">
+
+                  <label class="block">
+                    <span>Fax</span>
+                    <textarea
+                      name="fax"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+              </div>
+              <div class="form-inline-container">
+                <div class="form-inline-label">
+                  <label class="block">
+                    <span>Other</span>
+                    <textarea
+                      name="other"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+
+                  <div class="form-inline-label">
+
+                  <label class="block">
+                    <span>Website</span>
+                    <textarea
+                      name="website"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    
+                    ></textarea>
+                  </label>
+                </div>
+              </div>
+
+              <input type="checkbox" id="cb_sub_customer" name="cb_sub_customer" value="cb_sub_customer">
+              <label for="cb_sub_customer"> Is a sub-customer</label><br><br>
+
+              <strong>Address</strong><br>
+
+              <span>Street Address</span>
+              
+                    <textarea
+                      name="street_address"
+                      rows="4"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                      
+
+                  <div class="form-inline-container">
+                    <div class="form-inline-label">
+                      <label class="block">
+                        <span>City</span>
+                        <textarea
+                          name="city"
+                          rows="1"
+                          placeholder=""
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        
+                        ></textarea>
+                      </label>
+                    </div>
+    
+                      <div class="form-inline-label">
+    
+                      <label class="block">
+                        <span>Province</span>
+                        <textarea
+                          name="province"
+                          rows="1"
+                          placeholder=""
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        
+                        ></textarea>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-inline-container">
+                    <div class="form-inline-label">
+                      <label class="block">
+                        <span>Postal</span>
+                        <textarea
+                          name="postal"
+                          rows="1"
+                          placeholder=""
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        
+                        ></textarea>
+                      </label>
+                    </div>
+    
+                      <div class="form-inline-label">
+    
+                      <label class="block">
+                        <span>Country</span>
+                        <textarea
+                          name="country"
+                          rows="1"
+                          placeholder=""
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        
+                        ></textarea><br><br>
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <strong>Shpping Address</strong><br>
+
+                  <input type="checkbox" id="cb_billing_address" name="cb_billing_address" value="cb_billing_address">
+                  <label for="cb_billing_address"> Same as billing address</label><br> <br>
+
+
+                  <strong>Notes and Attachments</strong><br>
+
+                  <label class="block">
+                    <span>Notes</span>
+                    <textarea
+                      name="notes"
+                      rows="4"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+                  <div class="file-upload-box">
+                    <label for="file_attachment">Attachment:</label>
+                    <input type="file" id="file_attachment" name="attachment"><br><br>
+                  </div>
+
+                  <strong>Payments</strong><br>
+
+                  <div class="form-inline-container">
+                    <div class="form-inline-label">
+                      <label class="block">
+                        <span>Primary Payment Method</span>
+                        <select
+                          name="primary_payment_method"
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        >
+                          <option value="Cash">Cash</option>
+                          <option value="Cheque">Cheque</option>
+                          <option value="Credit_Card">Credit Card</option>
+                          <option value="Direct_Debit">Direct Debit</option>
+
+                          <!-- Add more options as needed -->
+                        </select>
+                      </label>
+                    </div>
+    
+                      <div class="form-inline-label">
+    
+                      <label class="block">
+                        <span>Terms</span>
+                        <select
+                          name="terms"
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        >
+                          <option value="Net_30">Net 30</option>
+                          <option value="Net_60">Net 60</option>
+                          <option value="Net_90">Net 90</option>
+                          <!-- Add more options as needed -->
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-inline-container">
+                    <div class="form-inline-label">
+                      <label class="block">
+                        <span>Sales from delivery Options</span>
+                        <select
+                          name="sales_from_delivery_options"
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        >
+                          <option value="use_company_default">Use Compamy Default</option>
+                          <option value="print_later">Print Later</option>
+                          <option value="send_later">Send Later</option>
+                          <option value="none">None</option>
+
+                          <!-- Add more options as needed -->
+                        </select>
+                      </label>
+                    </div>
+    
+                      <div class="form-inline-label">
+    
+                      <label class="block">
+                        <span>Language to use when you send invoices</span>
+                        <select
+                          name="invoice_lang"
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        >
+                          <option value="english">English</option>
+                          <option value="french">French</option>
+                          <option value="spanish">Spanish</option>
+                          <option value="italian">Italian</option>
+                          <option value="chinease">Chinese (tradional)</option>
+                          <option value="spanish">Spanish (Brazil)</option>
+
+                          <!-- Add more options as needed -->
+                        </select><br><br>
+                      </label>
+                    </div>
+                  </div>
+
+                  <strong>Additional Info</strong><br>
+
+                  <label class="block">
+                    <span>Sales Tax Registration</span>
+                    <textarea
+                      name="sales_tax_regidtration"
+                      rows="1"
+                      placeholder=""
+                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                    ></textarea>
+                  </label>
+
+                  <div class="form-inline-container">
+                    <div class="form-inline-label">
+                      <label class="block">
+                        <span>Opening Balance</span>
+                        <textarea
+                          name="openig_balance"
+                          rows="1"
+                          placeholder=""
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                        
+                        ></textarea>
+                      </label>
+                    </div>
+    
+                      <div class="form-inline-label">
+    
+                      <label class="block">
+                        <span>As of</span>
+                        <input
+                          name="as_of"
+                          class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
+                          placeholder="Exchange Rate"
+                          type="date"
+                        />
+                      </label><br><br>
+                    </div>
+                  </div>
+
+                    <button
+                      type="submit" 
+                      
+                      class="btn h-9 w-full space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90"
+                    >
+                      save
+                    </button>
+                </div>
+              </form>
+
+              
+              </div>
+              </div>
+            </div>
+          </div>
+
+
+
+
+        </div>
+        <div
+          class="mx-auto mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6"
+        >
+
+
+        </div>
+      </main>
+    </div>
+    <!--
+        This is a place for Alpine.js Teleport feature
+        @see https://alpinejs.dev/directives/teleport
+      -->
+    <div id="x-teleport-target"></div>
+    
+    
+    
+  </body>
+</html>
