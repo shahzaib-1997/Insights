@@ -1,32 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Meta tags  -->
+    <!-- Meta tags -->
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
 
-    <title>Accountant-Pro - Sales</title>
+    <title>Invoice</title>
     <link rel="icon" type="image/png" href="images/favicon.png" />
 
     <!-- CSS Assets -->
     <link rel="stylesheet" href="../static/css/app.css" />
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
-          rel="stylesheet"
-        />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
 
+    <style>
+      /* Apply italic font style to placeholder text for email input */
+      input[type="email"]::placeholder {
+        font-style: italic;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        border-collapse: collapse;
+      }
+      
+      #invoiceTable input[type='number'] {
+        width: 80px;
+      }
+      
+      #totalAmount th {
+        width: 120px;
+      }
+      
+      /* Styles for the popup */
+      .popup {
+        display: none;
+        position: absolute;
+        background-color: #fff;
+        padding: 20px;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        width: 350px;
+      }
+      
+      /* Styles for the overlay */
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9998;
+      }
+      
+      #drop_zone {
+        border: 1px dotted;
+        width: 380px;
+        height: 80px;
+      }
+
+      .dragover {
+        border-color: #007bff; /* Change border color to blue */
+        background-color: #f8f9fa; /* Change background color to light gray */
+      }
+    </style>
+  </head>
+
+  <body x-data class="is-header-blur" x-bind="$store.global.documentBody">
+    <!-- App preloader -->
+    <div></div>
+    <h3 class="mt-3 mx-3 text-xl font-semibold text-slate-600 dark:text-navy-100">Invoice No. <span id="invoiceNo2">{{ invoice_no }}</span></h3>
+    <div class="min-w-full overflow-x-auto">
+      <div class="col-span-12 sm:col-span-8">
+        <div class="card p-4 sm:p-5">
+          <form method="post" id="invoiceForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="flex mt-2" style="width: 50%;">
+              <div class="block flex-1">
+                <label>Customer</label>
+                <br />
+                <select class="form-select peer border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent" name="client" id="clientSelect" required style="width: 95%;">
+                  <option value="" selected></option>
+                  {% for client in clients %}
+                    <option value="{{ client.id }}" {% if invoice.customer.id == client.id %}selected{% endif %}>{{ client.display_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="block flex-1">
+                <div class="flex justify-between">
+                  <div>Customer email</div>
+                  <div>
+                    <a class="text-primary underline" href="#" id="openPopup">Cc/Bcc</a>
+                  </div>
+                </div>
+                <input type="email" class="form-input peer border border-slate-300" name="email" placeholder="Separate emails with a comma" style="width: 100%; height: 38px; padding: 2px;" required value="{{invoice.email}}" />
+                <div class="mt-1">
+                  <input type="checkbox" name="send_later" {% if invoice.send_later %}checked{% endif %} />
+                  <label>Send later</label>
+                </div>
+              </div>
+              <!-- Popup content -->
+              <div id="popup" class="popup">
+                <label>Cc</label>
+                <input type="email" class="form-input border border-slate-300" name="cc" placeholder="Email (Separate emails with a comma)" style="width: 100%; height: 38px; padding: 2px;" value="{% if invoice.cc %}{{invoice.cc}}{% endif %}" />
+                <label>Bcc</label>
+                <input type="email" class="form-input border border-slate-300" name="bcc" placeholder="Email (Separate emails with a comma)" style="width: 100%; height: 38px; padding: 2px;" value="{% if invoice.bcc %}{{invoice.bcc}}{% endif %}"/>
+                <div class="mt-2">
+                  <button class="btn bg-primary text-white" id="doneButton" type="button">Done</button>
+                  <button class="btn bg-error text-white" id="cancelButton" type="button">Cancel</button>
+                </div>
+              </div>
+              <!-- Overlay -->
+              <div id="overlay" class="overlay"></div>
+            </div>
+            <div class="flex mt-3">
+              <div class="flex" style="width: 75%;">
+                <label class="block" style="flex: 0.5; margin-right: 10px;">
+                  <span>Billing Address</span>
+                  <br />
+                  <textarea name="billing_address" rows="4" placeholder="Billing Address" required class="form-textarea w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent">{{invoice.billing_address}}</textarea>
+                </label>
+                <label class="block" style="flex: 0.5; margin-right: 10px;">
+                  <span>Terms</span>
+                  <br />
+                  <select name="terms" style="width: 80%;" id="terms"
+                  class="form-select peer rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent" required>
+                    <option value="Due on receipt">Due on receipt</option>
+                    <option value="Net 30" selected>Net 30</option>
+                    <option value="Net 60">Net 60</option>
+                    <option value="Net 90">Net 90</option>
+                  </select>
+                </label>
+                <label class="block" style="flex: 0.5;">
+                  <span>Invoice Date</span>
+                  <br />
+                  <input name="invoice_date" class="form-input peer rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent" placeholder="Exchange Rate" type="date" required />
+                </label>
+                <label class="block" style="flex: 0.5;">
+                  <span>Due Date</span>
+                  <br />
+                  <input name="due_date" class="form-input peer rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover-border-navy-400 dark:focus-border-accent" type="date" required />
+                </label>
+              </div>
+              <div class="float-end">
+                <label>
+                  <span>Invoice no.</span>
+                  <br />
+                  <input type="number" name="invoice_no" id="invoiceNo" class="rounded-lg border border-slate-300" style="height: 38px; padding: 2px;" value="{{ invoice_no }}" />
+                </label>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-12">
+              <label class="block sm:col-span-8">
+                <span>Tags</span>
+                <div class="mt-1.5">
+                  <input name="tags" class="form-input peer w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent" placeholder="Start typing to add a tag" type="text" />
+                </div>
+              </label>
+            </div>
+            <table class="w-full mt-3" id="invoiceTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Service Date</th>
+                  <th>Product/Service</th>
+                  <th>Description</th>
+                  <th>QTY</th>
+                  <th>Rate</th>
+                  <th>Amount</th>
+                  <th>Tax</th>
+                  <th>After Tax</th>
+                </tr>
+              </thead>
+              <tbody class="text-center">
+                <tr>
+                  <td id="serialNumber"></td>
+                  <td style="width: 100px;">
+                    <input class="form-input" name="service_date[]" type="date" required />
+                  </td>
+                  <td>
+                    <select class="form-select w-full" name="product_service[]" required>
+                      <option selected></option>
+                      {% for product in items %}
+                        <option value="{{ product.id }}">{{ product.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td class="text-left">
+                    <input class="form-input" name="description[]" type="text" placeholder="Description" />
+                  </td>
+                  <td>
+                    <input class="form-input text-center" name="quantity[]" type="number" placeholder="QTY" value="1" required />
+                  </td>
+                  <td>
+                    <input class="form-input text-center" name="rate[]" type="number" placeholder="Rate" value="0.00" required />
+                  </td>
+                  <td>
+                    <input class="form-input text-center" name="amount[]" type="number" placeholder="Amount" value="0.00" readonly />
+                  </td>
+                  <td>
+                    <select class="form-select text-center w-full" name="tax[]">
+                      <option value="" selected></option>
+                      {% for tax in taxes %}
+                        <option value="{{ tax.tax_percentage }}">{{ tax.tax_name }}({{ tax.tax_percentage }}%)</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td>
+                    <input class="form-input text-center" name="subtotal[]" type="number" placeholder="Subtotal" value="0.00" readonly />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="fa-pull-right" style="margin-top: 15px;">
+              <table id="totalAmount">
+                <tbody>
+                  <tr>
+                    <th>Balance Due</th>
+                    <td id="balanceDue" class="text-center">{{invoice.customer.opening_balance}}</td>
+                  </tr>
+                  <tr>
+                    <th>Total</th>
+                    <td>
+                      <input type="text" class="form-input text-center" name="total_amount" id="total" value="0" readonly />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="inline-block" style="margin: 20px;">
+              <button type="button" id="addLineButton" class="btn h-7 w-30 space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90">Add Line</button>
+              <button type="button" id="deleteLinesButton" class="btn h-7 w-30 space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90">Delete Lines</button>
+            </div>
+            <br />
+
+            <p>
+              <label for="w3review">Message on invoice</label>
+            </p>
+            <textarea class="border border-slate-300" id="text_on_invoice" name="message_on_invice" rows="4" cols="50" placeholder="Enter your message..." style="padding: 2px;"></textarea>
+            <br />
+
+            <p>
+              <label for="w3review">Message on statement</label>
+            </p>
+            <textarea class="border border-slate-300" id="text_on_message" name="message_on_statement" rows="4" cols="50" placeholder="Enter your message..." style="padding: 2px;"></textarea>
+            <br />
+
+            <p class="mt-1.5">Attachments</p>
+            <ul class="text-primary" id="fileList"></ul> <!-- This is where the file name will be displayed -->
+            <div id="drop_zone" class="flex items-center justify-center">
+              <p>
+                <i>Drag/Drop files here or click anywhere inside the box.</i>
+              </p>
+            </div>
+            <input type="file" id="attachment" name="attachment" style="display: none;" />
+
+            <button type="submit" class="btn h-9 space-x-2 bg-primary text-white mt-2 hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90">Save</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!--   
+        This is a place for Alpine.js Teleport feature
+        @see https://alpinejs.dev/directives/teleport
+         -->
+    <div id="x-teleport-target"></div>
 
     <!-- Javascript Assets -->
-    <script src="../static/js/app1.js" defer> </script>
-
-
+    <script src="../static/js/app.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script>
       /**
        * THIS SCRIPT REQUIRED FOR PREVENT FLICKERING IN SOME BROWSERS
@@ -34,284 +285,227 @@
       localStorage.getItem("_x_darkMode_on") === "true" &&
         document.documentElement.classList.add("dark");
 
-        function updateRate(selectElement) {
-      const rateInput = selectElement.parentElement.nextElementSibling.nextElementSibling.nextElementSibling;
-      const selectedOption = selectElement.options[selectElement.selectedIndex];
-      rateInput.value = selectedOption.value;
-  }
+      $(document).ready(function () {
 
-  
-      document.addEventListener("DOMContentLoaded", function () {
-        const addLineButton = document.getElementById("addLineButton");
-        const deleteLinesButton = document.getElementById("deleteLinesButton"); // Get the Delete Lines button
-        const tableBody = document.querySelector("table tbody");
-        const originalRow = tableBody.querySelector("tr");
-    
-        // Function to delete lines
-        function deleteLines() {
-          const rows = tableBody.querySelectorAll("tr");
-          if (rows.length > 1) { // Ensure there is at least one row before attempting to delete
-            tableBody.removeChild(rows[rows.length - 1]); // Remove the last row
-          }
+        var invoice_date = '{{invoice.date|safe}}';
+        if (invoice_date) {
+          $('input[name="invoice_date"]').val(invoice_date);
         }
-    
-        addLineButton.addEventListener("click", function () {
-          const newRow = originalRow.cloneNode(true);
-    
-          // Clear the values in the new row's input fields
-          const inputFields = newRow.querySelectorAll('input');
-          inputFields.forEach(function (input) {
-            input.value = '';
-          });
-    
-          // Append the new row to the table body
-          tableBody.appendChild(newRow);
+        else{
+          // Get today's date
+          var today = new Date();
+          
+          // Format date as yyyy-mm-dd
+          var formattedDate = today.toISOString().split('T')[0];
+          
+          // Set input value to today's date
+          $('input[name="invoice_date"]').val(formattedDate);
+
+        }
+
+        var due_date = '{{invoice.due_date|safe}}';
+        if (due_date) {
+          $('input[name="due_date"]').val(due_date);
+        }
+        else{
+          // Get today's date
+          var nextDay = new Date();
+          
+          // Increment the date by one day
+          nextDay.setDate(nextDay.getDate() + 1);
+          
+          // Format date as yyyy-mm-dd
+          var formattedNextDay = nextDay.toISOString().split('T')[0];
+          
+          // Set input value to next day's date
+          $('input[name="due_date"]').val(formattedNextDay);
+        }
+
+        var terms = '{{invoice.terms}}';
+        $("#terms option[value='" + terms + "']").attr("selected", "selected"); // Add selected attribute to the corresponding option
+
+        let tableBody = $("#invoiceTable tbody");
+        let originalRow = tableBody.find("tr");
+
+        // Function to update amount based on quantity and rate
+        function updateAmount(row) {
+          let quantity = parseFloat($(row).find('input[name="quantity[]"]').val());
+          let rate = parseFloat($(row).find('input[name="rate[]"]').val());
+          let amount = quantity * rate;
+          $(row).find('input[name="amount[]"]').val(amount.toFixed(2)); // Round to 2 decimal places
+
+          updateSubtotal(row);
+        }
+
+        // Add event listeners for quantity and rate change
+        originalRow.find('input[name="quantity[]"], input[name="rate[]"]').on("change", function () {
+          updateAmount(originalRow);
         });
-    
+
         // Add a click event listener to the Delete Lines button
-        deleteLinesButton.addEventListener("click", deleteLines);
+        $("#deleteLinesButton").on("click", function () {
+          let rows = tableBody.find("tr");
+          if (rows.length > 1) { // Ensure there is at least one row before attempting to delete
+            tableBody.children("tr").last().remove(); // Remove the last row
+            updateSerialNumbers();
+          }          
+        });
+
+        $("#addLineButton").on("click", function () {
+          // Clone the last row and append it to the table body
+          let newRow = originalRow.clone();
+          tableBody.append(newRow);
+
+          // Update the serial numbers of all rows
+          updateSerialNumbers();
+
+          // Reset values for the cloned row
+          newRow.find('input[type="text"], input[type="date"]').val('');
+          newRow.find('input[type="number"]').val('0.00');
+          newRow.find('input[name="quantity[]"]').val(1);
+          newRow.find('select[name="product[]"]').val('');
+          newRow.find('select[name="tax[]"]').val('');
+
+          // Add event listeners for quantity and rate change
+          newRow.find('input[name="quantity[]"], input[name="rate[]"]').on("change", function () {
+            updateAmount(newRow);
+          });
+        });
+
+
+        function updateSerialNumbers() {
+          tableBody.find("tr").each(function (index) {
+            $(this).find('#serialNumber').text(index + 1);
+          });
+        }
+
+        updateSerialNumbers();
+
+        function updateSubtotal(row) {
+          let taxPercentage = $(row).find('select[name="tax[]"]').val();
+          let amount = $(row).find('input[name="amount[]"]').val();
+
+          if (taxPercentage) {
+            let amountAfterTax = (amount * (1 + taxPercentage / 100)).toFixed(2);
+          }
+          else {
+            let amountAfterTax = amount;
+          }
+          $(row).find('input[name="subtotal[]"]').val(amountAfterTax);
+          updateTotal();
+        }
+
+        // Event listener for tax select change
+        $(document).on('change', 'select[name="tax[]"]', function () {
+          let row = $(this).closest('tr');
+          updateSubtotal(row);
+        });
+
+        function updateTotal() {
+          let total = 0;
+          $('input[name="subtotal[]"]').each(function () {
+            total += parseFloat($(this).val()) || 0;
+          });
+          let balance = $("#balanceDue").text();
+          if (balance) {
+            total += parseFloat(balance);
+          }
+          $('#total').val(total.toFixed(2));
+        }
+
+        // Function to retrieve opening balance by client ID
+        function getOpeningBalance(clientId) {
+          let clientData = {{clients_data| safe}};
+          return clientData[clientId] ? clientData[clientId] : 0;
+        }
+
+        // Function to update balance due based on selected client
+        function updateBalanceDue() {
+          let clientId = $("#clientSelect").val();
+          let openingBalance = getOpeningBalance(clientId);
+          $("#balanceDue").text(openingBalance.toFixed(2));
+          updateTotal();
+        }
+
+        // Event listener for client select change
+        $("#clientSelect").change(function () {
+          updateBalanceDue();
+        });
+
+        // jQuery script to open the popup when the button is clicked
+        $("#openPopup").click(function() {
+          let buttonOffset = $(this).offset();
+          let buttonWidth = $(this).outerWidth();
+          let buttonHeight = $(this).outerHeight();
+          
+          let popupHeight = $("#popup").outerHeight();
+          let popupWidth = $("#popup").outerWidth();
+          
+          let popupLeft = buttonOffset.left + (buttonWidth / 2) - (popupWidth / 2);
+          let popupTop = buttonOffset.top + buttonHeight;
+          
+          $("#popup").css({left: popupLeft, top: popupTop}).fadeIn();
+          $("#overlay").fadeIn();
+        });
+
+        // Close the popup when the Done/Cancel button is clicked
+        $("#doneButton, #cancelButton, #overlay").click(function() {
+          $("#popup").fadeOut();
+          $("#overlay").fadeOut();
+        });
+
+        $("#invoiceNo").change(function() {
+          $("#invoiceNo2").text($("#invoiceNo").val());
+        });
+
+        // Dragover handler
+        $('#drop_zone').on('dragover', function(event) {
+          event.preventDefault();
+          $(this).addClass('dragover');
+        });
+
+        // Dragleave handler
+        $('#drop_zone').on('dragleave', function(event) {
+          event.preventDefault();
+          $(this).removeClass('dragover');
+        });
+
+        // Drop handler
+        $('#drop_zone').on('drop', function(event) {
+          event.preventDefault();
+          $(this).removeClass('dragover');
+          let files = event.originalEvent.dataTransfer.files;
+  
+          $('#attachment')[0].files = files;
+
+          // Display the filename
+          displayFileName(files[0]);
+        });
+
+        // Click event on drop_zone to trigger file input
+        $('#drop_zone').on('click', function() {
+          $('#attachment').click();
+        });
+
+        // Change event on file input
+        $('#attachment').on('change', function() {
+          var files = $(this)[0].files;
+
+          // Display the filename
+          displayFileName(files[0]);
+        });
+
+        // Function to display filename
+        function displayFileName(file) {
+          var fileList = $('#fileList');
+          fileList.empty(); // Clear existing filename
+          
+          var listItem = $('<li>').text(file.name);
+          fileList.append(listItem);
+        }
+
       });
-    
 
-        
     </script>
-  </head>
-
-  <body x-data class="is-header-blur" x-bind="$store.global.documentBody">
-    <!-- App preloader-->
-    <div>
-     
-
-
-          
-
-          </div>
-          <h3
-            class="mt-3 text-xl font-semibold text-slate-600 dark:text-navy-100"
-          >
-            Invoice No.1003
-          </h3>
-          <div class="is-scrollbar-hidden min-w-full overflow-x-auto">
-
-          <div class="col-span-12 sm:col-span-8">
-            <div class="card p-4 sm:p-5">
-              <p
-                class="text-base font-medium text-slate-700 dark:text-navy-100"
-              >
-          
-              </p>
-              <form method="post">
-                {% csrf_token %}
-                <div class="mt-4 space-y-4">
-                  <label class="block">
-                    <span>Customer</span>
-                    <select
-                        class="form-select peer w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent"
-                      >
-                        {%for client in clients%}
-                        <option value="{{client.id}}">{{client.name}}</option>
-                        {%endfor%}
-
-                    </select>
-                            
-                    </label>
-                    <label class="block">
-                      <span>Terms</span>
-                      <span class="relative mt-1.5 flex">
-                        <select
-                          name="terms"
-                          class="form-select peer w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent"
-                        >
-                          <option value="Net 30">Net 30</option>
-                          <option value="Net 60">Net 60</option>
-                          <option value="Net 90">Net 90</option>
-                          <!-- Add more options as needed -->
-                        </select>
-                      </span>
-                    </label>
-                  </div>
-                  <div class="grid grid-cols-1 gap-4 sm:grid-cols-12">
-                    <label class="block sm:col-span-8">
-                      <span>Tags</span>
-                      <div class="relative mt-1.5 flex">
-                        <input
-                          name="tags"
-                          class="form-input peer w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent"
-                          placeholder="Start typing to add a tag"
-                          type="text"
-                        />
-                        <span
-                          class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-slate-400 peer-focus:text-primary dark:text-navy-300 dark:peer-focus:text-accent"
-                        >
-                          <i class="fa-regular fa-envelope text-base"></i>
-                        </span>
-                      </div>
-                    </label>
-                
-                    <label class="block sm:col-span-4">
-                      <span>Invoice Date</span>
-                      <div class="relative mt-1.5 flex">
-                        <input
-                          name="invoice_date"
-                          class="form-input peer w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover:border-navy-400 dark:focus:border-accent"
-                          placeholder="Exchange Rate"
-                          type="date"
-                        />
-                        <span
-                          class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-slate-400 peer-focus:text-primary dark:text-navy-300 dark:peer-focus:text-accent"
-                        >
-                          <i class="fa-solid fa-map-pin text-base"></i>
-                        </span>
-                      </div>
-                    </label>
-                    <label class="block sm:col-span-4">
-                      <span>Due Date</span>
-                      <div class="relative mt-1.5 flex">
-                        <input
-                          name="due_date"
-                          class="form-input peer w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 pl-9 placeholder:text-slate-400/70 hover:border-slate-400 focus:border-primary dark:border-navy-450 dark:hover-border-navy-400 dark:focus-border-accent"
-                          placeholder="Exchange Rate"
-                          type="date"
-                        />z 
-                        <span
-                          class="pointer-events-none absolute flex h-full w-10 items-center justify-center text-slate-400 peer-focus:text-primary dark:text-navy-300 dark:peer-focus:text-accent"
-                        >
-                          <i class="fa-solid fa-map-pin text-base"></i>
-                        </span>
-                      </div>
-                    </label>
-                  </div>
-                  <label class="block">
-                    <span>Billing Address</span>
-                    <textarea
-                      name="billing_address"
-                      rows="4"
-                      placeholder=""
-                      class="form-textarea mt-1.5 w-full rounded-lg border border-slate-300 bg-transparent p-2.5 placeholder:text-slate-400/70 hover:border-slate-400 focus-border-primary dark-border-navy-450 dark-hover-border-navy-400 dark-focus-border-accent"
-                    ></textarea>
-                  </label>
-                  <table class="min-w-full">
-                    <thead>
-                      <tr>
-                        <th>#</th>
-                        <th>Service Date</th>
-                        <th>Product/Service</th>
-                        <th>Description</th>
-                        <th>QTY</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
-                        <th>Tax</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      
-                      <tr>
-                        <td>1</td>
-                        <td><input class="form-input w-full" name="service_date" type="date" onchange="updateRate(this)"/></td>
-                        <td>
-                          
-                          
-                          <select class="form-select w-full" name="product_servicet" onchange="updateRate(this)">
-                            {% for product in items %}
-                            <option>{{ product.product_service }}</option>
-                            {% endfor %}
-                          </select>
-                          
-                        </td>
-                        <td><input class="form-input w-full" name="description" type="text" placeholder="Description" /></td>
-                        <td>
-                          <input class="form-input w-full" name="quantity" type="number" placeholder="QTY" >
-                        </td>
-                        <td>
-                          <input class="form-input w-full" name="rate" type="number" placeholder="Rate" />
-
-                        </td>
-                        <td>
-                          <input class="form-input w-full" name="amount" type="number" placeholder="Amount" >
-                        </td>
-                        <td><input class="form-input w-full" name="tax" type="number" /></td>
-                      </tr>
-                      
-                      
-                        
-                    </tbody>
-                    
-                  </table>
-                  <div x-data="{sameBillingAddress:true}">
-                    <div
-                      class="flex-wrap items-start space-y-2 pt-2 sm:flex sm:space-y-0 sm:space-x-5"
-                    ></div>
-                
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2" style="text-align: right; margin-top: 50px; margin-left: 900px;">
-                      <div class="self-end">
-                        <span class="text-sm font-bold" style="display: inline-block;">Subtotal</span>
-                        <br> <!-- Add a line break to separate the lines -->
-                        <span class="text-sm font-bold" style="display: inline-block;">Total  </span>
-                        <br> <!-- Add a line break to separate the lines -->
-                        <span class="text-sm font-bold" style="display: inline-block;">Balance Due </span>
-                      </div>
-                    </div>
-
-                    <div style="display: inline-block;">
-                      <button type="button" id="addLineButton" class="btn h-9 w-32 space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90">  
-                        Add Line
-                      </button>
-                      <button type="button" id="deleteLinesButton" class="btn h-9 w-32 space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90" onclick="clearLines"> 
-                        Delete Lines
-                      </button>
-                      <button type="button" id="subtotalButton" class="btn h-9 w-32 space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90">
-                        Subtotal
-                      </button>
-                    </div>
-                    <br>
-
-                    
-                      <p><label for="w3review">Message on invoice</label></p>
-                      <textarea id="text_on_invoice" name="message_on_invice" rows="4" cols="50" placeholder="Enter your message..."></textarea>
-                      <br>
-                      
-                    
-                      <p><label for="w3review">Message on statement</label></p>
-                      <textarea id="text_on_message" name="message_on_statement" rows="4" cols="50" placeholder="Enter your message..."></textarea>
-                      <br>
-                      
-                      
-                      
-                    <button
-                      type="submit" 
-                      
-                      class="btn h-9 w-full space-x-2 bg-primary text-white hover:bg-primary-focus focus:bg-primary-focus active:bg-primary-focus/90 dark:bg-accent dark:hover-bg-accent-focus dark-focus-bg-accent-focus dark-active-bg-accent/90"
-                    >
-                      save
-                    </button>
-                </div>
-              </form>
-
-              
-              </div>
-              </div>
-            </div>
-          </div>
-
-
-
-
-        </div>
-        <div
-          class="mx-auto mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:gap-6"
-        >
-
-
-        </div>
-      </main>
-    </div>
-    <!--
-        This is a place for Alpine.js Teleport feature
-        @see https://alpinejs.dev/directives/teleport
-      -->
-    <div id="x-teleport-target"></div>
-    
-    
-    
   </body>
 </html>

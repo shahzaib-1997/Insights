@@ -205,15 +205,8 @@ def sales(request):
 
 
 def invoice(request):
-    clients = Client.objects.all()
-    items = InvoiceItem.objects.all()
-    company = Company.objects.first()
-    currency = Currency.objects.first()
-    client = clients.first()
-    invoice = Invoice.objects.all()
-    invo = invoice.first()
-
     if request.method == "POST":
+        client_id = request.POST["client"]
         terms = request.POST["terms"]
         tags = request.POST["tags"]
         invoice_date = request.POST["invoice_date"]
@@ -221,45 +214,96 @@ def invoice(request):
         billing_address = request.POST["billing_address"]
         message_on_invice = request.POST["message_on_invice"]
         message_on_statement = request.POST["message_on_statement"]
+        service_date = request.POST.getlist("service_date[]")
+        product_service_id = request.POST.getlist("product_service[]")
+        description = request.POST.getlist("description[]")
+        quantity = request.POST.getlist("quantity[]")
+        rate = request.POST.getlist("rate[]")
+        amount = request.POST.getlist("amount[]")
+        tax = request.POST.getlist("tax[]")
+        total_amount = request.POST.get("total_amount")
+        email = request.POST.get("email")
+        cc = request.POST.get("cc")
+        bcc = request.POST.get("bcc")
+        send_later = request.POST.get("send_later")
+        number = request.POST.get("invoice_no")
+        attachment = request.FILES.get("attachment")
+        company_id = request.session["company"]
+        company = Company.objects.get(id=company_id)
 
-        service_date = request.POST["service_date"]
-        product_service_id = request.POST["product_servicet"]  # ID of the selected product/service
-        description = request.POST["description"]
-        quantity = request.POST["quantity"]
-        rate = request.POST["rate"]
-        amount = request.POST["amount"]
-        tax = request.POST["tax"]
-
-        # Retrieve the selected product or service based on the ID
-        product_service = Items.objects.get(id=product_service_id)
+        client = Client.objects.get(id=client_id)
 
         data = Invoice(
             company=company,
-            currency=currency,
-            client=client,
+            customer=client,
+            email=email,
             terms=terms,
-            tags=tags,
-            invoice_date=invoice_date,
+            date=invoice_date,
             due_date=due_date,
             billing_address=billing_address,
-            message_on_invice=message_on_invice,
+            message=message_on_invice,
             message_on_statement=message_on_statement,
+            total_amount=total_amount,
+            status="Sent",
+            number=number,
+            attachment=attachment,
         )
+
+        if cc:
+            data.cc = cc
+        if bcc:
+            data.bcc = bcc
+        if send_later:
+            data.send_later = True
+
         data.save()
 
-        data_table = InvoiceItem(
-            invoice=invo,
-            service_date=service_date,
-            product_service=product_service,
-            description=description,
-            quantity=quantity,
-            rate=rate,
-            amount=amount,
-            tax=tax,
-        )
-        data_table.save()
+        for i in range(len(product_service_id)):
+            # Retrieve the selected product or service based on the ID
+            product_service = Items.objects.get(id=product_service_id[i])
+            data_table = InvoiceItem(
+                invoice=data,
+                service_date=service_date[i],
+                product_service=product_service,
+                description=description[i],
+                quantity=quantity[i],
+                rate=rate[i],
+                amount=amount[i],
+            )
+            if tax[i]:
+                tax_obj = Tax.objects.get(tax_percentage=tax[i])
+                data_table.tax = tax_obj
+            data_table.save()
+        client.opening_balance = total_amount
+        client.save()
+        return redirect(invoice)
+    elif request.method == "GET":
+        clients = Client.objects.all()
+        items = Items.objects.all()
+        taxes = Tax.objects.all()
+        tags = Tag.objects.all()
 
-    return render(request, "add-sales.html", {"clients": clients, "items": items})
+        # Prepare client data as dictionary with client ID as key and opening balance as value
+        clients_data = {client.id: float(client.opening_balance) for client in clients}
+
+        context = {
+            "clients": clients,
+            "items": items,
+            "taxes": taxes,
+            "tags": tags,
+            "clients_data": clients_data,
+        }
+
+        invoice_id = request.GET.get("id", None)
+        if invoice_id is not None:
+            invoice_obj = Invoice.objects.get(id=invoice_id)
+            context["invoice"] = invoice_obj
+            context["invoice_no"]= invoice_obj.number
+        else:
+            invoice_number = Invoice.objects.last().id + 1
+            context["invoice_no"]= invoice_number
+
+    return render(request,"add-sales.html",context=context)
 
 
 def expense(request):

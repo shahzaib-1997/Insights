@@ -12,7 +12,7 @@ class Client(models.Model):
     last_name = models.CharField(null=True, max_length=255)
     suffix = models.CharField(null=True, max_length=255)
     display_name = models.CharField(null=True, max_length=255)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
     email = models.CharField(null=True, max_length=255)
     phone = models.CharField(null=True, max_length=255)
     mobile = models.CharField(null=True, max_length=255)
@@ -76,12 +76,12 @@ class Client(models.Model):
 
 
 class SubClient(Client):
-    parent_client = models.ForeignKey(Client, null=True, on_delete=models.CASCADE, related_name="parent")
+    parent_client = models.ForeignKey(Client, null=True, on_delete=models.CASCADE, related_name="parent", blank=True)
     bill_parent_customer = models.BooleanField(default=False)
 
 
 class Employee(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
     title = models.CharField(null=True, max_length=255)
     first_name = models.CharField(null=True, max_length=255)
     last_name = models.CharField(null=True, max_length=255)
@@ -133,28 +133,28 @@ class Category(models.Model):
 
 
 class Items(models.Model):
-    type = models.ForeignKey(ItemType, on_delete=models.CASCADE)
+    type = models.ForeignKey(ItemType, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=100)
     SKU = models.CharField(max_length=100)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="product_images/")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, blank=True, null=True)
+    image = models.ImageField(upload_to="product_images/", blank=True, null=True)
     initial_quantity = models.IntegerField()
     as_of_date = models.DateField()
     reorder_point = models.DateField()
     description = models.TextField()
     rate = models.DecimalField(max_digits=10, decimal_places=2)
     tax_inclusive = models.BooleanField(default=False)
-    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, null=True)
+    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, null=True, blank=True)
     purchasing_information = models.TextField(null=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    expense_account = models.ForeignKey(ExpenseAccount, on_delete=models.CASCADE)
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    expense_account = models.ForeignKey(ExpenseAccount, on_delete=models.CASCADE, blank=True, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class BaseModel(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Client, on_delete=models.CASCADE, default=None)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
+    customer = models.ForeignKey(Client, on_delete=models.CASCADE, blank=True, null=True)
     email = models.TextField(null=True)
     cc = models.TextField(null=True)
     bcc = models.TextField(null=True)
@@ -179,12 +179,12 @@ class RepeatModel(models.Model):
 
 class BaseItemModel(models.Model):
     service_date = models.DateField(null=True)
-    product_service = models.ForeignKey(Items, on_delete=models.CASCADE)
+    product_service = models.ForeignKey(Items, on_delete=models.CASCADE, blank=True, null=True)
     description = models.TextField(null=True)
     quantity = models.PositiveIntegerField(null=True)
     rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, null=True)
+    tax = models.ForeignKey(Tax, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -219,7 +219,7 @@ class Invoice(BaseModel, RepeatModel):
 
 
 class InvoiceItem(BaseItemModel):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class InvoiceSent(models.Model):
@@ -253,9 +253,9 @@ class PaymentMethod(models.Model):
 
 
 class Payment(BaseModel):
-    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, blank=True, null=True)
     reference_no = models.CharField(max_length=20, null=True)
-    deposit_to = models.ForeignKey(Account, on_delete=models.CASCADE)
+    deposit_to = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2)
     memo = models.TextField(null=True)
     status = models.CharField(
@@ -292,7 +292,7 @@ class Estimate(BaseModel, RepeatModel):
 
 
 class EstimateItem(BaseItemModel):
-    estimate = models.ForeignKey(Estimate, on_delete=models.CASCADE)
+    estimate = models.ForeignKey(Estimate, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class EstimatePending(models.Model):
@@ -316,9 +316,9 @@ class EstimateClosed(models.Model):
 
 
 class SalesReceipt(BaseModel, RepeatModel):
-    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, blank=True, null=True)
     reference_no = models.CharField(max_length=20, null=True)
-    deposit_to = models.ForeignKey(Account, on_delete=models.CASCADE)
+    deposit_to = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
     amount_received = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=10,
@@ -333,7 +333,7 @@ class SalesReceipt(BaseModel, RepeatModel):
 
 
 class SalesReceiptItem(BaseItemModel):
-    sales_receipt = models.ForeignKey(SalesReceipt, on_delete=models.CASCADE)
+    sales_receipt = models.ForeignKey(SalesReceipt, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class SalesReceiptActive(models.Model):
@@ -371,7 +371,7 @@ class CreditNote(BaseModel, RepeatModel):
 
 
 class CreditNoteItem(BaseItemModel):
-    credit_note = models.ForeignKey(CreditNote, on_delete=models.CASCADE)
+    credit_note = models.ForeignKey(CreditNote, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class CreditNoteActive(models.Model):
@@ -395,8 +395,8 @@ class CreditNoteCancelled(models.Model):
 
 
 class RefundReceipt(BaseModel, RepeatModel):
-    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
-    refund_from = models.ForeignKey(Account, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, blank=True, null=True)
+    refund_from = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
     amount_refunded = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=10,
@@ -411,7 +411,7 @@ class RefundReceipt(BaseModel, RepeatModel):
 
 
 class RefundReceiptItem(BaseItemModel):
-    refund_receipt = models.ForeignKey(RefundReceipt, on_delete=models.CASCADE)
+    refund_receipt = models.ForeignKey(RefundReceipt, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class RefundReceiptActive(models.Model):
@@ -435,8 +435,8 @@ class RefundReceiptCancelled(models.Model):
 
 
 class DelayedCredit(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Client, on_delete=models.CASCADE, default=None)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
+    customer = models.ForeignKey(Client, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateField(null=True)
     number = models.CharField(max_length=50, null=True)
     tags = models.ManyToManyField(Tag)
@@ -456,7 +456,7 @@ class DelayedCredit(models.Model):
 
 
 class DelayedCreditItem(BaseItemModel):
-    delayed_credit = models.ForeignKey(DelayedCredit, on_delete=models.CASCADE)
+    delayed_credit = models.ForeignKey(DelayedCredit, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class DelayedCreditActive(models.Model):
@@ -480,8 +480,8 @@ class DelayedCreditCancelled(models.Model):
 
 
 class DelayedCharge(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Client, on_delete=models.CASCADE, default=None)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
+    customer = models.ForeignKey(Client, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateField(null=True)
     number = models.CharField(max_length=50, null=True)
     tags = models.ManyToManyField(Tag)
@@ -501,7 +501,7 @@ class DelayedCharge(models.Model):
 
 
 class DelayedChargeItem(BaseItemModel):
-    delayed_charge = models.ForeignKey(DelayedCharge, on_delete=models.CASCADE)
+    delayed_charge = models.ForeignKey(DelayedCharge, on_delete=models.CASCADE, blank=True, null=True)
 
 
 class DelayedChargeActive(models.Model):
@@ -525,19 +525,19 @@ class DelayedChargeCancelled(models.Model):
 
 
 class TimeActivity(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
     date = models.DateTimeField(default=timezone.now)
     name = models.CharField(max_length=255)
-    customer = models.ForeignKey(Client, on_delete=models.CASCADE, default=None)
-    service = models.ForeignKey(Items, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Client, on_delete=models.CASCADE, blank=True, null=True)
+    service = models.ForeignKey(Items, on_delete=models.CASCADE, blank=True, null=True)
     billable = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     activity_time = models.TimeField(null=True)
     description = models.TextField(null=True)
 
 
 class BankAccount(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
     start_amount = models.IntegerField()
     name = models.CharField(max_length=200)
     iban = models.CharField(max_length=34)
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
+    currency = models.ForeignKey(Currency, on_delete=models.PROTECT, blank=True, null=True)

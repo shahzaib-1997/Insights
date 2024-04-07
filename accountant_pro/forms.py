@@ -1,8 +1,9 @@
 from django import forms
-# from .models import CompanyDetail
+from .models import Invoice
 
 
-# class CompanyDetailForm(forms.ModelForm):
-#     class Meta:
-#         model = CompanyDetail
-#         fields = '__all__'
+class InvoiceForm(forms.ModelForm):
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+

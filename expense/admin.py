@@ -1,9 +1,13 @@
 from django.contrib import admin
-from expense.models import *
+from django.apps import apps
 
-admin.site.register(Bills)
-admin.site.register(BillItems)
-admin.site.register(Supplier)
-admin.site.register(Categories)
-admin.site.register(CategoryItem)
-admin.site.register(Customer)
+app_name = "expense"
+
+app_config = apps.get_app_config(app_name)
+
+# Get all models from the specified app
+app_models = app_config.get_models()
+
+# Register all models from the specified app with the admin site
+for model in app_models:
+    admin.site.register(model)

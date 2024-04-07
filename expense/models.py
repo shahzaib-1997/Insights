@@ -7,18 +7,19 @@ class ExpenseAccount(models.Model):
     account_type = models.CharField(
         max_length=20,
         null=True,
+        blank=True,
         choices=[
             ("Cost of sales", "Cost of sales"),
             ("Expenses", "Expenses"),
             ("Other expense", "Other expense"),
         ],
     )
-    detail_type = models.CharField(max_length=100, null=True)
-    name = models.CharField(max_length=255, null=True)
-    description = models.TextField(null=True)
+    detail_type = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     is_sub_account = models.BooleanField(default=False)
-    parent_account = models.ForeignKey(Account, on_delete=models.CASCADE)
-    default_tax_code = models.ForeignKey(Tax, on_delete=models.CASCADE, null=True)
+    parent_account = models.ForeignKey(Account, on_delete=models.CASCADE, null=True, blank=True)
+    default_tax_code = models.ForeignKey(Tax, on_delete=models.CASCADE, null=True, blank=True)
 
     @property
     def available_detail_types(self):
@@ -85,7 +86,7 @@ class Supplier(models.Model):
     suffix = models.CharField(null=True, max_length=255)
     email = models.CharField(null=True, max_length=255)
     company = models.ForeignKey(
-        Company, related_name="vendor_details", on_delete=models.CASCADE
+        Company, related_name="vendor_details", on_delete=models.CASCADE, blank=True
     )
     phone = models.CharField(null=True, max_length=255)
     mobile = models.CharField(null=True, max_length=255)
@@ -115,16 +116,16 @@ class Supplier(models.Model):
     account_no = models.CharField(null=True, max_length=255)
     business_id = models.CharField(null=True, max_length=255)
     default_expense_account = models.ForeignKey(
-        ExpenseAccount, on_delete=models.CASCADE
+        ExpenseAccount, on_delete=models.CASCADE, blank=True, null=True
     )
-    attachment = models.FileField(upload_to="attachments/", null=True)
+    attachment = models.FileField(upload_to="attachments/", null=True, blank=True)
     inactive = models.BooleanField(default=False)
 
 
 class Bills(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
-    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, blank=True, null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE, null=True, blank=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True)
 
     payment_account = models.CharField(max_length=255, default="Payment Account")
     payment_date = models.DateField(null=True)
@@ -140,11 +141,11 @@ class Bills(models.Model):
     )
     tags = models.TextField(null=True)
     memo = models.CharField(max_length=255, null=True)
-    attachment = models.FileField(upload_to="attachments/", null=True)
+    attachment = models.FileField(upload_to="attachments/", null=True, blank=True)
 
 
 class BillItems(models.Model):
-    invoice = models.ForeignKey(Bills, on_delete=models.CASCADE)
+    invoice = models.ForeignKey(Bills, on_delete=models.CASCADE, blank=True, null=True)
     service_date = models.DateField(null=True)
     # product_service = models.ForeignKey(
     #     Items, on_delete=models.CASCADE, related_name="products"
@@ -161,7 +162,7 @@ class Categories(models.Model):
 
 
 class CategoryItem(models.Model):
-    category = models.ForeignKey(Categories, on_delete=models.CASCADE)
+    category = models.ForeignKey(Categories, on_delete=models.CASCADE, blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     description = models.TextField(null=True)
 
